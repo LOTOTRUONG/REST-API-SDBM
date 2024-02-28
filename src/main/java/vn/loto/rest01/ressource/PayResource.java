@@ -1,5 +1,8 @@
-package vn.loto.rest01;
+package vn.loto.rest01.ressource;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -8,18 +11,25 @@ import vn.loto.rest01.metier.Pays;
 
 import java.util.List;
 
-@Path("/country")
+@Path("/countries")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Pays", description = "Crud sur la table pays")
+
 public class PayResource {
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllPays() {
-        List<Pays> pays = DAOFactory.getPaysDAO().getAllWithContinent();
+    @Operation(summary = "Tous pays", description = "Liste des pays")
+    @ApiResponse(responseCode = "200", description = "Ok!")
+    @ApiResponse(responseCode = "404", description = "Liste des pays introuvable")    public Response getAllPays() {
+        List<Pays> pays = DAOFactory.getPaysDAO().getAll();
         return Response.ok(pays).build();
     }
 
     @GET
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "pays par id", description = "Rechercher un pays par son identifiant")
+    @ApiResponse(responseCode = "200", description = "Ok! pays trouvé")
+    @ApiResponse(responseCode = "404", description = "pays introuvable")
     public Response getContinentById(@PathParam("id") Integer id) {
         Pays pays = DAOFactory.getPaysDAO().getByID(id);
         if (pays != null) {
@@ -30,7 +40,10 @@ public class PayResource {
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Insérer", description = "Insérer un pays par nom")
+    @ApiResponse(responseCode = "201", description = "La ressource a été crée")
+    @ApiResponse(responseCode = "400", description = "pays null")
+    @ApiResponse(responseCode = "500", description = "Le serveur a rencontré un problème")
     public Response insert(Pays pays){
         if (pays == null) {
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -44,6 +57,12 @@ public class PayResource {
 
     @PUT
     @Path("/{id}")
+    @Operation(summary = "Modifier", description = "Mettre à jour un pays")
+    @ApiResponse(responseCode = "200", description = "OK!")
+    @ApiResponse(responseCode = "400", description = "pays null")
+    @ApiResponse(responseCode = "404", description = "pays introuvable")
+    @ApiResponse(responseCode = "409", description = "Le nom du pays est dupliqué")
+    @ApiResponse(responseCode = "500", description = "Le serveur a rencontré un problème")
     public Response update(@PathParam("id") Integer id, Pays pays){
         if (id == null || pays == null){
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -59,6 +78,10 @@ public class PayResource {
     }
     @DELETE
     @Path("/{id}")
+    @Operation(summary = "Supprimer", description = "Supprimer un pays")
+    @ApiResponse(responseCode = "200", description = "OK!")
+    @ApiResponse(responseCode = "400", description = "pays null")
+    @ApiResponse(responseCode = "500", description = "Le serveur a rencontré un problème")
     public Response delete(@PathParam("id") Integer id) {
         if (id == null){
             return Response.status(Response.Status.BAD_REQUEST).build();

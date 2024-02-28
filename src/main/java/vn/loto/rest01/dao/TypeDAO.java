@@ -65,10 +65,15 @@ public class TypeDAO extends DAO<Type, Type, Integer> {
     @Override
     public boolean insert(Type type) {
         String sqlRequest = "INSERT INTO TYPEBIERE (NOM_TYPE) VALUES (?)";
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, type.getLibelle());
             preparedStatement.executeUpdate();
-            return true;
+            ResultSet resultSet = preparedStatement.getGeneratedKeys();
+            if (resultSet.next()){
+                type.setId(resultSet.getInt(1));
+                return true;
+            }
+            return false;
         } catch (SQLException E) {
             E.printStackTrace();
             return false;

@@ -5,6 +5,7 @@ import vn.loto.rest01.metier.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ContinentDAO extends DAO<Continent, Continent, Integer> {
@@ -75,11 +76,17 @@ public ArrayList<Continent> getAll(){
     }
     @Override
     public boolean insert(Continent continent) {
-        String sqlRequest = "insert into CONTINENT values " + continent.getLibelle();
-        try(Statement statement = connection.createStatement()) {
-            statement.execute(sqlRequest);
-            return true;
-        }catch (SQLException E) {
+        String sqlRequest = "insert into CONTINENT values (?) ";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, continent.getLibelle());
+            preparedStatement.executeUpdate();
+            ResultSet resultSet = preparedStatement.getGeneratedKeys();
+            if (resultSet.next()){
+                continent.setId(resultSet.getInt(1));
+                return true;
+            }
+            return false;
+        } catch (SQLException E) {
             E.printStackTrace();
             return false;
         }
@@ -113,6 +120,33 @@ public ArrayList<Continent> getAll(){
 
         return continentMarqueData;
     }
+    public List<Pays> getPaysByContinent(int continentId) {
+        List<Pays> paysList = new ArrayList<>();
+        String sqlRequest = "SELECT PAYS.ID_PAYS, PAYS.NOM_PAYS, CONTINENT.ID_CONTINENT, CONTINENT.NOM_CONTINENT " +
+                "FROM CONTINENT " +
+                "JOIN PAYS ON PAYS.ID_CONTINENT = CONTINENT.ID_CONTINENT " +
+                "WHERE CONTINENT.ID_CONTINENT = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest)) {
+            preparedStatement.setInt(1, continentId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                Pays pays = new Pays();
+                pays.setId(resultSet.getInt("ID_PAYS"));
+                pays.setLibelle(resultSet.getString("NOM_PAYS"));
 
+                Continent continent = new Continent();
+                continent.setId(resultSet.getInt("ID_CONTINENT"));
+                continent.setLibelle(resultSet.getString("NOM_CONTINENT"));
+
+                pays.setContinent(continent);
+                paysList.add(pays);
+            }
+            resultSet.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return paysList;
+    }
 
 }

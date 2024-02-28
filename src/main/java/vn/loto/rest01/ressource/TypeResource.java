@@ -1,5 +1,8 @@
-package vn.loto.rest01;
+package vn.loto.rest01.ressource;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.GenericEntity;
 import jakarta.ws.rs.core.MediaType;
@@ -10,9 +13,15 @@ import vn.loto.rest01.metier.Type;
 import java.util.List;
 
 @Path("/type")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Type", description = "Crud sur la table type")
+
 public class TypeResource {
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Toutes types", description = "Liste des types")
+    @ApiResponse(responseCode = "200", description = "Ok!")
+    @ApiResponse(responseCode = "404", description = "Liste des types introuvable")
     public Response getAllTypes(){
         List<Type> types = DAOFactory.getTypeDAO().getAll();
         return Response.ok(new GenericEntity<List<Type>>(types) {}).build();
@@ -20,7 +29,9 @@ public class TypeResource {
 
     @GET
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Type par id", description = "Rechercher une type par son identifiant")
+    @ApiResponse(responseCode = "200", description = "Ok! Type trouvée")
+    @ApiResponse(responseCode = "404", description = "Type introuvable")
     public Response getTypeById(@PathParam("id") Integer id){
         Type type = DAOFactory.getTypeDAO().getByID(id);
         if (type != null){
@@ -31,7 +42,10 @@ public class TypeResource {
     }
     //method to create new Type
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Insérer", description = "Insérer une type par nom")
+    @ApiResponse(responseCode = "201", description = "La ressource a été crée")
+    @ApiResponse(responseCode = "400", description = "type nulle")
+    @ApiResponse(responseCode = "500", description = "Le serveur a rencontré un problème")
     public Response insert(Type type){
         if (type == null) {
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -45,7 +59,12 @@ public class TypeResource {
 
     @PUT
     @Path("/{id}")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Modifier", description = "Mettre à jour une type")
+    @ApiResponse(responseCode = "200", description = "OK!")
+    @ApiResponse(responseCode = "400", description = "type nulle")
+    @ApiResponse(responseCode = "404", description = "Type introuvable")
+    @ApiResponse(responseCode = "409", description = "Le nom de la type est dupliqué")
+    @ApiResponse(responseCode = "500", description = "Le serveur a rencontré un problème")
     public Response update(@PathParam("id") Integer id, Type type){
         if (type == null || id == null){
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -63,6 +82,10 @@ public class TypeResource {
 
     @DELETE
     @Path("/{id}")
+    @Operation(summary = "Supprimer", description = "Supprimer une type")
+    @ApiResponse(responseCode = "200", description = "OK!")
+    @ApiResponse(responseCode = "400", description = "type nulle")
+    @ApiResponse(responseCode = "500", description = "Le serveur a rencontré un problème")
     public Response delete(@PathParam("id") Integer id){
         if (id == null){
             return Response.status(Response.Status.BAD_REQUEST).build();

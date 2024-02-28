@@ -82,10 +82,18 @@ public class FabricantDAO extends DAO<Fabricant, Fabricant, Integer> {
 
     @Override
     public boolean insert(Fabricant object) {
-        String sqlRequest = "insert into FABRICANT values " + object.getNomFabricant();
-        try(Statement statement = connection.createStatement()) {
-            statement.execute(sqlRequest);
-            return true;
+        String sqlRequest = "insert into FABRICANT values (?)";
+        try(PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, object.getNomFabricant());
+            int rowsAffected = preparedStatement.executeUpdate();
+            if (rowsAffected == 1) {
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                if (resultSet.next()){
+                    object.setId(resultSet.getInt(1));
+                    return true;
+                }
+            }
+            return false;
         }catch (SQLException E) {
             E.printStackTrace();
             return false;

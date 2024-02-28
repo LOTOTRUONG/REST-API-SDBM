@@ -1,7 +1,11 @@
 package vn.loto.rest01.metier;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class Continent {
+    @Schema(required = true, example = "0")
     private Integer id;
+    @Schema(required = true, example = "Europe")
     private String libelle;
 
     public Continent() {

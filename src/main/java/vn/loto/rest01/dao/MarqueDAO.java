@@ -89,10 +89,20 @@ public class MarqueDAO extends DAO<Marque, Marque, Integer> {
 
     @Override
     public boolean insert(Marque object) {
-        String sqlRequest = "insert into Marque values " + object.getLibelle();
-        try(Statement statement = connection.createStatement()) {
-            statement.execute(sqlRequest);
-            return true;
+        String sqlRequest = "insert into Marque values (?,?,?) ";
+        try(PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, object.getLibelle());
+            preparedStatement.setInt(2, object.getPays().getId());
+            preparedStatement.setInt(3, object.getFabricant().getId());
+            int rowsAffected = preparedStatement.executeUpdate();
+            if (rowsAffected == 1 ){
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                if (resultSet.next()){
+                    object.setId(resultSet.getInt(1));
+                    return true;
+                }
+            }
+            return false;
         }catch (SQLException E) {
             E.printStackTrace();
             return false;

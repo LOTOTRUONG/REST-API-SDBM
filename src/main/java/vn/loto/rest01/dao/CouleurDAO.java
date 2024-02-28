@@ -63,14 +63,16 @@ public class CouleurDAO extends DAO<Couleur, Couleur, Integer> {
     }
     @Override
     public boolean insert(Couleur couleur) {
-        String sqlRequest = "INSERT INTO COULEUR VALUES (?)";
+        String sqlRequest = "INSERT INTO COULEUR (NOM_COULEUR) VALUES (?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, couleur.getNomCouleur());
-            preparedStatement.executeUpdate();
-            ResultSet resultSet = preparedStatement.getGeneratedKeys();
-            if (resultSet.next()){
-                couleur.setId(resultSet.getInt(1));
-                return true;
+            int rowsAffected = preparedStatement.executeUpdate();
+            if (rowsAffected == 1) {
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    couleur.setId(resultSet.getInt(1));
+                    return true;
+                }
             }
             return false;
         } catch (SQLException E) {
@@ -78,6 +80,7 @@ public class CouleurDAO extends DAO<Couleur, Couleur, Integer> {
             return false;
         }
     }
+
     @Override
     public boolean delete(Couleur object) {
         String sqlRequest = "Delete from COULEUR WHERE ID_COULEUR = ?";

@@ -31,7 +31,6 @@ public class PaysDAO extends DAO<Pays, Continent, Integer> {
             while (resultSet.next()){
                 Pays pay = new Pays(resultSet.getInt("ID_PAYS"), resultSet.getString("NOM_PAYS"));
                 Continent continent = new Continent();
-                continent.setId(resultSet.getInt("ID_CONTINENT"));
                 continent.setLibelle(resultSet.getString("NOM_CONTINENT"));
                 pay.setContinent(continent);
                 pay.setCountMarque(resultSet.getInt("NUMBER_MARQUE"));
@@ -43,6 +42,7 @@ public class PaysDAO extends DAO<Pays, Continent, Integer> {
         }
         return liste;
     }
+
 
     @Override
     public ArrayList<Pays> getLike(Continent continent) {
@@ -64,27 +64,6 @@ public class PaysDAO extends DAO<Pays, Continent, Integer> {
         return liste;
     }
 
-    public ArrayList<Pays> getAllPaysInContinent(int continentId) {
-        ArrayList<Pays> liste = new ArrayList<>();
-        String sqlCommand = "SELECT ID_PAYS, NOM_PAYS FROM PAYS WHERE ID_CONTINENT = ?";
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlCommand)) {
-            preparedStatement.setInt(1, continentId);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                int idPays = resultSet.getInt("ID_PAYS");
-                String nomPays = resultSet.getString("NOM_PAYS");
-                liste.add(new Pays(idPays, nomPays));
-            }
-            resultSet.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return liste;
-    }
-
-
-
-
     @Override
     public boolean update(Pays object) {
         String sqlRequest = "update PAYS set NOM_PAYS = ? WHERE ID_PAYS = ?";
@@ -101,10 +80,19 @@ public class PaysDAO extends DAO<Pays, Continent, Integer> {
 
     @Override
     public boolean insert(Pays object) {
-        String sqlRequest = "insert into PAYS values " + object.getLibelle();
-        try(Statement statement = connection.createStatement()) {
-            statement.execute(sqlRequest);
-            return true;
+        String sqlRequest = "insert into PAYS values (?,?)";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, object.getLibelle());
+            preparedStatement.setInt(2, object.getContinent().getId());
+            int rowsAffected = preparedStatement.executeUpdate();
+            if (rowsAffected == 1){
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                    if (resultSet.next()){
+                        object.setId(resultSet.getInt(1));
+                        return true;
+                    }
+                }
+            return false;
         }catch (SQLException E) {
             E.printStackTrace();
             return false;
@@ -123,31 +111,4 @@ public class PaysDAO extends DAO<Pays, Continent, Integer> {
         }
     }
 
-    public List<Pays> getAllWithContinent() {
-        List<Pays> paysList = new ArrayList<>();
-        String sqlRequest = "SELECT PAYS.ID_PAYS, PAYS.NOM_PAYS, CONTINENT.ID_CONTINENT, CONTINENT.NOM_CONTINENT " +
-                "FROM PAYS " +
-                "JOIN CONTINENT ON PAYS.ID_CONTINENT = CONTINENT.ID_CONTINENT";
-
-        try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(sqlRequest);
-            while (resultSet.next()) {
-                Pays pays = new Pays();
-                pays.setId(resultSet.getInt("ID_PAYS"));
-                pays.setLibelle(resultSet.getString("NOM_PAYS"));
-
-                Continent continent = new Continent();
-                continent.setId(resultSet.getInt("ID_CONTINENT"));
-                continent.setLibelle(resultSet.getString("NOM_CONTINENT"));
-
-                pays.setContinent(continent);
-                paysList.add(pays);
-            }
-            resultSet.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return paysList;
-    }
 }
