@@ -6,16 +6,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import vn.loto.rest01.dao.DAOFactory;
-import vn.loto.rest01.dto.CouleurResponse;
-import vn.loto.rest01.hateoas.HateOas;
-import vn.loto.rest01.hateoas.Link;
+import vn.loto.rest01.dto.CouleurDTO;
 import vn.loto.rest01.metier.Couleur;
 import vn.loto.rest01.security.Tokened;
 
-import java.net.URI;
 import java.util.List;
 
-@Path("/color")
+@Path("/colors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Couleur", description = "Crud sur la table couleur")
@@ -30,7 +27,9 @@ public class CouleurResource {
     @ApiResponse(responseCode = "404", description = "Liste des couleurs introuvable")
     public Response getAllColors() {
         List<Couleur> colors = DAOFactory.getCouleurDAO().getAll();
-        return Response.ok(colors).status(200).build();
+        UriBuilder uriBuilder = uriInfo.getRequestUriBuilder();
+        List<CouleurDTO> couleurDTOList = CouleurDTO.toDtoList(colors,uriBuilder);
+        return Response.ok(couleurDTOList).status(200).build();
     }
 
     @GET
@@ -43,15 +42,10 @@ public class CouleurResource {
 
         if (color != null) {
             //link to access different path
-            UriBuilder uriBuilder = UriBuilder.fromUri(uriInfo.getRequestUri());
-            URI allColorURI = uriBuilder.clone().replacePath("api/color").build();
-            URI specificColorURI = uriBuilder.clone().build();
-            HateOas hateOas = new HateOas();
-            hateOas.addLink(new Link("Toutes Couleurs", HttpMethod.GET, allColorURI));
-            hateOas.addLink(new Link("Couleur", HttpMethod.GET, specificColorURI));
+            UriBuilder uriBuilder = uriInfo.getBaseUriBuilder().path("/colors");
+            CouleurDTO couleurDTO = new CouleurDTO(color,uriBuilder);
 
-            CouleurResponse couleurResponse = new CouleurResponse(color, hateOas);
-            return Response.ok(couleurResponse).build(); }
+            return Response.ok(couleurDTO).build(); }
          else {
             return Response.status(Response.Status.NOT_FOUND).build(); }
 
@@ -116,6 +110,8 @@ public class CouleurResource {
     @ApiResponse(responseCode = "200", description = "OK!")
     @ApiResponse(responseCode = "400", description = "couleur nulle")
     @ApiResponse(responseCode = "500", description = "Le serveur a rencontré un problème")
+    @ApiResponse(responseCode = "401", description = "No authorization for deleting")
+
     public Response delete(@PathParam("id") Integer id) {
         if (id == null){
             return Response.status(Response.Status.BAD_REQUEST).build();

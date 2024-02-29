@@ -12,11 +12,10 @@ import java.util.List;
 public class TypeDAO extends DAO<Type, Type, Integer> {
     @Override
     public Type getByID(Integer id) {
-        String sqlRequest = "Select id_type, nom_type from TYPEBIERE where id_type = " + id;
-        Type type;
+        String sqlRequest = "Select id_type, nom_type, (select count(*) from article where article.ID_TYPE = typebiere.id_type) as NbArticle from TYPEBIERE where id_type = " + id;
         try(Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sqlRequest);
-            if(resultSet.next()) return new Type(resultSet.getInt(1),resultSet.getString(2));
+            if(resultSet.next()) return new Type(resultSet.getInt(1),resultSet.getString(2), resultSet.getInt(3));
             return null;
         }catch (Exception e) {
             e.printStackTrace();
@@ -25,11 +24,11 @@ public class TypeDAO extends DAO<Type, Type, Integer> {
     }
     public ArrayList<Type> getAll(){
         ArrayList<Type> listType = new ArrayList<>();
-        String sqlRequest = "SELECT id_type, nom_type FROM TYPEBIERE";
+        String sqlRequest = "Select id_type, nom_type, (select count(*) from article where article.ID_TYPE = typebiere.id_type) as NbArticle from TYPEBIERE";
         try(Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sqlRequest);
             while (resultSet.next()) {
-                listType.add(new Type(resultSet.getInt(1),resultSet.getString(2)));
+                listType.add(new Type(resultSet.getInt(1),resultSet.getString(2), resultSet.getInt(3)));
             } resultSet.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -39,12 +38,12 @@ public class TypeDAO extends DAO<Type, Type, Integer> {
 
     @Override
     public ArrayList<Type> getLike(Type object) {
-        String sqlCommand = "SELECT id_type, nom_type FROM TYPEBIERE WHERE id_type LIKE '%" + object.getLibelle()+"%'";
+        String sqlCommand = "Select id_type, nom_type, (select count(*) from article where article.ID_TYPE = typebiere.id_type) as NbArticle from TYPEBIERE WHERE id_type LIKE '%" + object.getLibelle()+"%'";
         ArrayList<Type> listType = new ArrayList<>();
         try(Statement statement = connection.createStatement()){
             ResultSet resultSet = statement.executeQuery(sqlCommand);
             while (resultSet.next()) {
-                listType.add(new Type(resultSet.getInt(1),resultSet.getString(2)));
+                listType.add(new Type(resultSet.getInt(1),resultSet.getString(2), resultSet.getInt(3)));
             } resultSet.close();
         } catch (Exception e) {e.printStackTrace();}
         return listType;

@@ -1,10 +1,24 @@
 package vn.loto.rest01.metier;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@Builder
+@Schema
 public class Marque {
     private Integer id;
     private String libelle;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Pays pays;
     private Fabricant fabricant;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer nbArticle;
     public Marque()
     {
         id=0;
@@ -16,8 +30,11 @@ public class Marque {
     public Marque(Integer id, String libelle) {
         this.id = id;
         this.libelle = libelle;
-        this.pays = new Pays();
-        this.fabricant = new Fabricant();
+    }
+    public Marque(Integer id, String libelle, int nbArticle) {
+        this.id = id;
+        this.libelle = libelle;
+        this.nbArticle = nbArticle;
     }
     public Marque(Integer id, String libelle, Pays pays, Fabricant fabricant) {
         this.id = id;
@@ -34,38 +51,5 @@ public class Marque {
         this.id = id;
         this.libelle = libelle;
         this.fabricant = fabricant;
-    }
-    public Integer getId(){
-        return id;
-    }
-    public void setId(Integer id) {
-        this.id = id;
-    }
-    public String getLibelle()
-    {
-        return libelle;
-    }
-
-    public void setLibelle(String libelle)
-    {
-        this.libelle = libelle;
-    }
-
-    public Pays getPays(){
-        return pays;
-    }
-    public void setPays(Pays pays){
-        this.pays = pays;
-    }
-    public Fabricant getFabricant(){
-        return fabricant;
-    }
-    public void setFabricant(Fabricant fabricant) {
-        this.fabricant = fabricant;
-    }
-
-    @Override
-    public String toString() {
-        return libelle;
     }
 }

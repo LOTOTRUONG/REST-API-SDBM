@@ -12,7 +12,6 @@ public class ContinentDAO extends DAO<Continent, Continent, Integer> {
     @Override
     public Continent getByID(Integer id) {
         String sqlRequest = "Select id_continent, nom_continent from continent where id_continent = " + id;
-        Continent continent;
         try(Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sqlRequest);
             if(resultSet.next()) return new Continent(resultSet.getInt(1),resultSet.getString(2));
@@ -103,43 +102,14 @@ public ArrayList<Continent> getAll(){
         }
     }
 
-    public Map<String, Double> getContinentMarqueData() {
-        Map<String, Double> continentMarqueData = new HashMap<>();
-        String sqlRequest = "{call ps_ContinentWithMarque}";
-
-        try (CallableStatement statement = connection.prepareCall(sqlRequest);
-             ResultSet resultSet = statement.executeQuery()) {
-            while (resultSet.next()) {
-                String continentName = resultSet.getString("NOM_CONTINENT");
-                double percentageMarque = resultSet.getDouble("PERCENTAGE_MARQUE");
-                continentMarqueData.put(continentName, percentageMarque);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return continentMarqueData;
-    }
     public List<Pays> getPaysByContinent(int continentId) {
         List<Pays> paysList = new ArrayList<>();
-        String sqlRequest = "SELECT PAYS.ID_PAYS, PAYS.NOM_PAYS, CONTINENT.ID_CONTINENT, CONTINENT.NOM_CONTINENT " +
-                "FROM CONTINENT " +
-                "JOIN PAYS ON PAYS.ID_CONTINENT = CONTINENT.ID_CONTINENT " +
-                "WHERE CONTINENT.ID_CONTINENT = ?";
+        String sqlRequest = "Select id_pays, nom_pays, id_continent, (select nom_continent from continent where continent.id_continent = pays.id_continent) as nom_continent from PAYS WHERE ID_CONTINENT = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest)) {
             preparedStatement.setInt(1, continentId);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                Pays pays = new Pays();
-                pays.setId(resultSet.getInt("ID_PAYS"));
-                pays.setLibelle(resultSet.getString("NOM_PAYS"));
-
-                Continent continent = new Continent();
-                continent.setId(resultSet.getInt("ID_CONTINENT"));
-                continent.setLibelle(resultSet.getString("NOM_CONTINENT"));
-
-                pays.setContinent(continent);
-                paysList.add(pays);
+                paysList.add(new Pays(resultSet.getInt(1), resultSet.getString(2)));
             }
             resultSet.close();
         } catch (SQLException e) {

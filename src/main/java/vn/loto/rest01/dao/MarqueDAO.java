@@ -12,14 +12,27 @@ import java.util.List;
 public class MarqueDAO extends DAO<Marque, Marque, Integer> {
     @Override
     public Marque getByID(Integer id) {
-        String sqlReques = "SELECT ID_MARQUE, NOM_MARQUE FROM MARQUE WHERE ID_MARQUE = " +id;
-        Marque marque;
-        try(Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(sqlReques);
-            if(resultSet.next()) return new Marque(resultSet.getInt(1),resultSet.getString(2));
-            return null;
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        String sqlRequest = "SELECT ID_MARQUE, NOM_MARQUE, " +
+                "(Select nom_pays from pays where pays.id_pays = marque.id_pays) as NOM_PAYS, " +
+                "ISNULL((Select nom_fabricant from fabricant where fabricant.id_fabricant = marque.id_fabricant), 'Autre') as NOM_FABRICANT, " +
+                "(select count(*) from article where article.ID_MARQUE = marque.ID_MARQUE) as NbArticle " +
+                "FROM MARQUE WHERE ID_MARQUE = ? ";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest)) {
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                Marque marque = new Marque(resultSet.getInt("ID_MARQUE"), resultSet.getString("NOM_MARQUE"));
+                Pays pays = new Pays();
+                pays.setLibelle(resultSet.getString("NOM_PAYS"));
+                Fabricant fabricant = new Fabricant();
+                fabricant.setNomFabricant(resultSet.getString("NOM_FABRICANT"));
+                marque.setPays(pays);
+                marque.setFabricant(fabricant);
+                marque.setNbArticle(resultSet.getInt("NbArticle"));
+                return marque;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -27,26 +40,24 @@ public class MarqueDAO extends DAO<Marque, Marque, Integer> {
     @Override
     public ArrayList<Marque> getAll() {
         ArrayList<Marque> liste = new ArrayList<>();
-        String sqlRequest = "SELECT ID_MARQUE, NOM_MARQUE, PAYS.ID_PAYS, PAYS.NOM_PAYS, CONTINENT.ID_CONTINENT, CONTINENT.NOM_CONTINENT, " +
-                "ISNULL(FABRICANT.ID_FABRICANT, (SELECT MAX(ID_FABRICANT) FROM FABRICANT) + 1) AS ID_FABRICANT, " +
-                "ISNULL(FABRICANT.NOM_FABRICANT, 'Autre') AS NOM_FABRICANT " +
-                "FROM MARQUE " +
-                "LEFT JOIN FABRICANT ON MARQUE.ID_FABRICANT = FABRICANT.ID_FABRICANT " +
-                "LEFT JOIN PAYS ON MARQUE.ID_PAYS = PAYS.ID_PAYS " +
-                "JOIN CONTINENT ON PAYS.ID_CONTINENT = CONTINENT.ID_CONTINENT";
+        String sqlRequest = "SELECT ID_MARQUE, NOM_MARQUE, " +
+                "           (Select nom_pays from pays where pays.id_pays = marque.id_pays) as NOM_PAYS, " +
+                "           ISNULL((Select nom_fabricant from fabricant where fabricant.id_fabricant = marque.id_fabricant), 'Autre') as NOM_FABRICANT, " +
+                "           (select count(*) from article where article.ID_MARQUE = marque.ID_MARQUE) as NbArticle " +
+                "           FROM MARQUE";
 
         try (Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sqlRequest);
             while (resultSet.next()) {
-                Continent continent = new Continent(resultSet.getInt("ID_CONTINENT"), resultSet.getString("NOM_CONTINENT"));
-                Pays pays = new Pays(resultSet.getInt("ID_PAYS"), resultSet.getString("NOM_PAYS"), continent);
-                Fabricant fabricant = new Fabricant(resultSet.getInt("ID_FABRICANT"), resultSet.getString("NOM_FABRICANT"));
-
-                Marque marque = new Marque(resultSet.getInt("ID_MARQUE"), resultSet.getString("NOM_MARQUE"));
+                Pays pays = new Pays();
+                pays.setLibelle(resultSet.getString("NOM_PAYS"));
+                Fabricant fabricant = new Fabricant();
+                fabricant.setNomFabricant(resultSet.getString("NOM_FABRICANT"));
+                Marque marque = new Marque(resultSet.getInt(1), resultSet.getString(2));
                 marque.setPays(pays);
                 marque.setFabricant(fabricant);
+                marque.setNbArticle(resultSet.getInt("NbArticle"));
                 liste.add(marque);
-
             }
             resultSet.close();
         } catch (Exception e) {

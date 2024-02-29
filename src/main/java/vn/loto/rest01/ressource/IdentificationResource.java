@@ -52,8 +52,8 @@ public class IdentificationResource {
         URI forgotLoginURI = uriBuilder.clone().path("/forgotLogin").queryParam("email", "yourEmail").build();
 
         HateOas hateOas = new HateOas();
-        hateOas.addLink(new Link("Forgot Password", HttpMethod.GET, forgotPasswordURI));
-        hateOas.addLink(new Link("Forgot Login", HttpMethod.GET, forgotLoginURI));
+        hateOas.addLink("Forgot Password", HttpMethod.GET, forgotPasswordURI);
+        hateOas.addLink("Forgot Login", HttpMethod.GET, forgotLoginURI);
 
         return Response.ok(hateOas).status(Response.Status.UNAUTHORIZED).build();
 

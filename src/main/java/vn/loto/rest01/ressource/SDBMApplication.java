@@ -14,7 +14,7 @@ import jakarta.ws.rs.core.Application;
                 title = "API de le SDBM",
                 version = "1.0",
                 description = "SDBM API",
-                contact = @Contact(url = "https://lototruong.github.io/", name = "SDBM", email = "loan.truongtt@gmail.com")
+                contact = @Contact(url = "https://github.com/LOTOTRUONG/JSF-SBDM-Website", name = "SDBM", email = "loan.truongtt@gmail.com")
         ))
 @SecurityScheme(
         name = "Bearer Authentication",

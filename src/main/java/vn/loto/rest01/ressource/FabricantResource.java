@@ -8,10 +8,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import vn.loto.rest01.dao.DAOFactory;
 import vn.loto.rest01.metier.Fabricant;
+import vn.loto.rest01.security.Tokened;
 
 import java.util.List;
 
-@Path("/fabricant")
+@Path("/fabricants")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Fabricant", description = "Crud sur la table fabricant")
@@ -82,6 +83,7 @@ public class FabricantResource {
         }
     @DELETE
     @Path("/{id}")
+    @Tokened
     @Operation(summary = "Supprimer", description = "Supprimer un fabricant")
     @ApiResponse(responseCode = "200", description = "OK!")
     @ApiResponse(responseCode = "400", description = "fabricant null")

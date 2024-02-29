@@ -4,27 +4,32 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.GenericEntity;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.*;
+import org.glassfish.jersey.server.Uri;
 import vn.loto.rest01.dao.DAOFactory;
+import vn.loto.rest01.dto.TypeDTO;
 import vn.loto.rest01.metier.Type;
+import vn.loto.rest01.security.Tokened;
 
 import java.util.List;
 
-@Path("/type")
+@Path("/types")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Type", description = "Crud sur la table type")
 
 public class TypeResource {
+    @Context
+    UriInfo uriInfo;
     @GET
     @Operation(summary = "Toutes types", description = "Liste des types")
     @ApiResponse(responseCode = "200", description = "Ok!")
     @ApiResponse(responseCode = "404", description = "Liste des types introuvable")
     public Response getAllTypes(){
         List<Type> types = DAOFactory.getTypeDAO().getAll();
-        return Response.ok(new GenericEntity<List<Type>>(types) {}).build();
+        UriBuilder uriBuilder = uriInfo.getRequestUriBuilder();
+        List<TypeDTO> typeDTOList = TypeDTO.toDtoList(types, uriBuilder);
+        return Response.ok(typeDTOList).status(200).build();
     }
 
     @GET
@@ -35,7 +40,9 @@ public class TypeResource {
     public Response getTypeById(@PathParam("id") Integer id){
         Type type = DAOFactory.getTypeDAO().getByID(id);
         if (type != null){
-            return Response.ok(type).build();
+            UriBuilder uriBuilder = uriInfo.getBaseUriBuilder().path("/types");
+            TypeDTO typeDTO = new TypeDTO(type, uriBuilder);
+            return Response.ok(typeDTO).build();
         } else {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -82,6 +89,7 @@ public class TypeResource {
 
     @DELETE
     @Path("/{id}")
+    @Tokened
     @Operation(summary = "Supprimer", description = "Supprimer une type")
     @ApiResponse(responseCode = "200", description = "OK!")
     @ApiResponse(responseCode = "400", description = "type nulle")

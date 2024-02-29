@@ -7,7 +7,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import vn.loto.rest01.dao.DAOFactory;
 import vn.loto.rest01.hateoas.HateOas;
-import vn.loto.rest01.hateoas.Link;
 import vn.loto.rest01.metier.Continent;
 import vn.loto.rest01.metier.Pays;
 import vn.loto.rest01.security.Tokened;
@@ -17,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Path("/continent")
+@Path("/continents")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Continent", description = "Crud sur la table continent")
@@ -49,8 +48,8 @@ public class ContinentResource {
             response.put("continent", continent);
 
             HateOas hateOas = new HateOas();
-            hateOas.addLink(new Link("Toutes Continents", HttpMethod.GET, allContinentURI));
-            hateOas.addLink(new Link("Continent ID " + id, HttpMethod.GET, specificContinentURI));
+            hateOas.addLink("Toutes Continents", HttpMethod.GET, allContinentURI);
+            hateOas.addLink("Continent ID " + id, HttpMethod.GET, specificContinentURI);
 
             response.put("links", hateOas.getLinks());
 

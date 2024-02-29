@@ -1,12 +1,16 @@
 package vn.loto.rest01.metier;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;
 
 public class Couleur {
     @Schema(required = true, example = "0")
     private Integer id;
     @Schema(required = true, example = "Rose")
     private String nomCouleur;
+    @Getter @Setter
+    private int nbArticle;
 
     public Couleur(){
         id=0;
@@ -16,6 +20,12 @@ public class Couleur {
     {
         this.id = id;
         this.nomCouleur = nomCouleur;
+    }
+    public Couleur(Integer id, String nomCouleur, int nbArticle)
+    {
+        this.id = id;
+        this.nomCouleur = nomCouleur;
+        this.nbArticle = nbArticle;
     }
     public Couleur(String nomCouleur){
         this.nomCouleur = nomCouleur;

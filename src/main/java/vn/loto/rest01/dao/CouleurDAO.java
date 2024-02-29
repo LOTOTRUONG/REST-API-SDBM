@@ -11,11 +11,10 @@ import java.util.List;
 public class CouleurDAO extends DAO<Couleur, Couleur, Integer> {
     @Override
     public Couleur getByID(Integer id) {
-        String sqlRequest = "Select id_couleur, nom_couleur from couleur where id_couleur = " + id;
-        Couleur couleur = null;
+        String sqlRequest = "Select id_couleur, nom_couleur, (select count(*) from article where article.id_couleur = couleur.id_couleur) as NbArticle from couleur where id_couleur = " + id;
         try(Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sqlRequest);
-            if(resultSet.next()) return new Couleur(resultSet.getInt(1),resultSet.getString(2));
+            if(resultSet.next()) return new Couleur(resultSet.getInt(1),resultSet.getString(2), resultSet.getInt(3));
             return null;
         }catch (Exception e) {
             e.printStackTrace();
@@ -24,11 +23,11 @@ public class CouleurDAO extends DAO<Couleur, Couleur, Integer> {
     }
     public ArrayList<Couleur> getAll(){
         ArrayList<Couleur> listCouleur = new ArrayList<>();
-        String sqlRequest = "SELECT id_couleur, NOM_COULEUR FROM COULEUR";
+        String sqlRequest = "Select id_couleur, nom_couleur, (select count(*) from article where article.id_couleur = couleur.id_couleur) as NbArticle from couleur";
         try(Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sqlRequest);
             while (resultSet.next()) {
-                listCouleur.add(new Couleur(resultSet.getInt(1),resultSet.getString(2)));
+                listCouleur.add(new Couleur(resultSet.getInt(1),resultSet.getString(2), resultSet.getInt(3)));
             } resultSet.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -38,12 +37,12 @@ public class CouleurDAO extends DAO<Couleur, Couleur, Integer> {
 
     @Override
     public ArrayList<Couleur> getLike(Couleur object) {
-        String sqlCommand = "SELECT ID_COULEUR, NOM_COULEUR FROM COULEUR WHERE ID_COULEUR LIKE '%" + object.getNomCouleur()+"%'";
+        String sqlCommand = "Select id_couleur, nom_couleur, (select count(*) from article where article.id_couleur = couleur.id_couleur) as NbArticle from couleur WHERE ID_COULEUR LIKE '%" + object.getNomCouleur()+"%'";
         ArrayList<Couleur> listCouleur = new ArrayList<>();
         try(Statement statement = connection.createStatement()){
             ResultSet resultSet = statement.executeQuery(sqlCommand);
             while (resultSet.next()) {
-                listCouleur.add(new Couleur(resultSet.getInt(1),resultSet.getString(2)));
+                listCouleur.add(new Couleur(resultSet.getInt(1),resultSet.getString(2),resultSet.getInt(3)));
             } resultSet.close();
         } catch (Exception e) {e.printStackTrace();}
         return listCouleur;

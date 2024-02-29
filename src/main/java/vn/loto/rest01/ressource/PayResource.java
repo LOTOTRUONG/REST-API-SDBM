@@ -4,10 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.*;
 import vn.loto.rest01.dao.DAOFactory;
+import vn.loto.rest01.dto.PaysDTO;
 import vn.loto.rest01.metier.Pays;
+import vn.loto.rest01.security.Tokened;
 
 import java.util.List;
 
@@ -17,12 +18,16 @@ import java.util.List;
 @Tag(name = "Pays", description = "Crud sur la table pays")
 
 public class PayResource {
+    @Context
+    UriInfo uriInfo;
     @GET
     @Operation(summary = "Tous pays", description = "Liste des pays")
     @ApiResponse(responseCode = "200", description = "Ok!")
     @ApiResponse(responseCode = "404", description = "Liste des pays introuvable")    public Response getAllPays() {
         List<Pays> pays = DAOFactory.getPaysDAO().getAll();
-        return Response.ok(pays).build();
+        UriBuilder uriBuilder = uriInfo.getRequestUriBuilder();
+        List<PaysDTO> paysDTOList = PaysDTO.toDtoList(pays,uriBuilder);
+        return Response.ok(paysDTOList).status(200).build();
     }
 
     @GET
@@ -33,7 +38,9 @@ public class PayResource {
     public Response getContinentById(@PathParam("id") Integer id) {
         Pays pays = DAOFactory.getPaysDAO().getByID(id);
         if (pays != null) {
-            return Response.ok(pays).build();
+            UriBuilder uriBuilder = uriInfo.getBaseUriBuilder().path("/countries");
+            PaysDTO paysDTO = new PaysDTO(pays, uriBuilder);
+            return Response.ok(paysDTO).build();
         } else {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -78,6 +85,7 @@ public class PayResource {
     }
     @DELETE
     @Path("/{id}")
+    @Tokened
     @Operation(summary = "Supprimer", description = "Supprimer un pays")
     @ApiResponse(responseCode = "200", description = "OK!")
     @ApiResponse(responseCode = "400", description = "pays null")

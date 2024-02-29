@@ -3,9 +3,7 @@ package vn.loto.rest01.metier;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class Fabricant {
-    @Schema(required = true, example = "0")
     private int id;
-    @Schema(required = true, example = "fabricant")
     private String nomFabricant;
    public Fabricant() {
        id = 0;

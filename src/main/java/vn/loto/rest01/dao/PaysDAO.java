@@ -9,32 +9,36 @@ import java.util.List;
 public class PaysDAO extends DAO<Pays, Continent, Integer> {
     @Override
     public Pays getByID(Integer id) {
-        String sqlRequest = "Select id_pays, nom_pays, id_continent, continent.nom_continent from pays" +
-                "join continent on continent.id_continent = pays.id_continent" +
-                " where id_pays = " +id;
-        Pays pays;
-        try(Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(sqlRequest);
-            if(resultSet.next()) return new Pays(resultSet.getInt(1),resultSet.getString(2));
-            return null;
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            return null;
+        String sqlRequest = "Select id_pays, nom_pays, (select nom_continent from continent where continent.id_continent = pays.id_continent) as nom_continent, (select count(*) from marque where MARQUE.ID_PAYS = PAYS.ID_PAYS) as NbMarque from Pays where id_pays = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest)) {
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                Pays pays = new Pays(resultSet.getInt("id_pays"), resultSet.getString("nom_pays"));
+                Continent continent = new Continent();
+                continent.setLibelle(resultSet.getString("nom_continent"));
+                pays.setContinent(continent);
+                pays.setCountMarque(resultSet.getInt("NbMarque"));
+                return pays;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return null;
     }
     @Override
     public ArrayList<Pays> getAll() {
-        String sqlRequest = "{Call ps_PaysWithMarque}";
+        String sqlRequest = "Select id_pays, nom_pays, (select nom_continent from continent where continent.id_continent = pays.id_continent) as nom_continent, (select count(*) from marque where MARQUE.ID_PAYS = PAYS.ID_PAYS) as NbMarque from Pays";
         ArrayList <Pays> liste = new ArrayList<>();
-        try(CallableStatement callableStatement = connection.prepareCall(sqlRequest)) {
-            ResultSet resultSet = callableStatement.executeQuery();
+        try(Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(sqlRequest);
             while (resultSet.next()){
-                Pays pay = new Pays(resultSet.getInt("ID_PAYS"), resultSet.getString("NOM_PAYS"));
+                Pays pays = new Pays(resultSet.getInt(1), resultSet.getString(2));
                 Continent continent = new Continent();
                 continent.setLibelle(resultSet.getString("NOM_CONTINENT"));
-                pay.setContinent(continent);
-                pay.setCountMarque(resultSet.getInt("NUMBER_MARQUE"));
-                liste.add(pay);
+                pays.setContinent(continent);
+                pays.setCountMarque(resultSet.getInt("NbMarque"));
+                liste.add(pays);
             }
             resultSet.close();
         } catch (Exception exception){
@@ -47,15 +51,16 @@ public class PaysDAO extends DAO<Pays, Continent, Integer> {
     @Override
     public ArrayList<Pays> getLike(Continent continent) {
         ArrayList<Pays> liste = new ArrayList<>();
-        String sqlCommand = "SELECT ID_PAYS, NOM_PAYS, CONTINENT.NOM_CONTINENT FROM PAYS " +
-                "JOIN CONTINENT ON CONTINENT.ID_CONTINENT = PAYS.ID_CONTINENT WHERE PAYS.ID_CONTINENT = ?";
+        String sqlCommand = "Select id_pays, nom_pays, (select nom_continent from continent where continent.id_continent = pays.id_continent) as nom_continent from Pays WHERE PAYS.ID_CONTINENT = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlCommand)) {
             preparedStatement.setInt(1, continent.getId());
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                int idPays = resultSet.getInt("ID_PAYS");
-                String nomPays = resultSet.getString("NOM_PAYS");
-                liste.add(new Pays(idPays, nomPays, continent));
+                Pays pays = new Pays(resultSet.getInt(1), resultSet.getString(2));
+                continent.setLibelle(resultSet.getString("NOM_CONTINENT"));
+                pays.setContinent(continent);
+                pays.setCountMarque(resultSet.getInt("NbMarque"));
+                liste.add(pays);
             }
             resultSet.close();
         } catch (SQLException e) {
